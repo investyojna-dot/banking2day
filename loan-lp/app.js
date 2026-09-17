@@ -58,6 +58,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const otpInput = document.getElementById('otp_code');
     const dispMaskedPhone = document.getElementById('disp-masked-phone');
 
+    /*
+     * Resume the right step on a hard refresh (or a shared /thank-you link).
+     * Each step's own URL only changes what the address bar shows; without this,
+     * reloading always re-renders the default (phone-entry) panel regardless of
+     * how far the visitor actually got.
+     */
+    (function restoreStepFromUrl() {
+        const path = window.location.pathname;
+        const savedRef = sessionStorage.getItem('b2d_reference_id');
+        const savedMobile = sessionStorage.getItem('b2d_mobile_number');
+        const otpVerified = sessionStorage.getItem('b2d_otp_verified') === 'true';
+
+        if (path === '/thank-you' && savedRef) {
+            pPhone.classList.remove('active');
+            const refEl = document.getElementById('ty-ref-id');
+            if (refEl) refEl.textContent = savedRef;
+            if (pageWrapper) pageWrapper.classList.add('state-thankyou-active');
+            pThankyou.classList.add('active');
+            return;
+        }
+
+        if (path === '/details' && otpVerified && savedMobile) {
+            pPhone.classList.remove('active');
+            if (mobileInput) mobileInput.value = savedMobile;
+            pInfo.classList.add('active');
+            return;
+        }
+
+        if (path === '/verify-otp' && savedMobile) {
+            pPhone.classList.remove('active');
+            mobileInput.value = savedMobile;
+            dispMaskedPhone.textContent = `+91 ${savedMobile.substring(0, 2)}******${savedMobile.substring(8)}`;
+            pOtp.classList.add('active');
+            return;
+        }
+
+        // No session state matches this URL (fresh visit, expired session, or a
+        // link shared before ever starting the funnel) — land on step 1 and
+        // normalise the address bar so it doesn't claim a step that isn't shown.
+        if (path !== '/') history.replaceState({ step: 'phone' }, '', '/');
+    })();
+
     // Step 1: Send WhatsApp OTP API Call
     if (btnSendWa) {
         btnSendWa.addEventListener('click', async () => {
@@ -86,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     dispMaskedPhone.textContent = `+91 ${mobVal.substring(0, 2)}******${mobVal.substring(8)}`;
                     pPhone.classList.remove('active');
                     pOtp.classList.add('active');
+                    sessionStorage.setItem('b2d_mobile_number', mobVal);
                     history.pushState({ step: 'otp' }, '', '/verify-otp');
                     if (typeof fbq === 'function') {
                         fbq('trackCustom', 'OTPRequested', { content_name: 'loan_lp_otp_requested', content_category: 'Personal loan' });
@@ -98,6 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dispMaskedPhone.textContent = `+91 ${mobVal.substring(0, 2)}******${mobVal.substring(8)}`;
                 pPhone.classList.remove('active');
                 pOtp.classList.add('active');
+                sessionStorage.setItem('b2d_mobile_number', mobVal);
                 history.pushState({ step: 'otp' }, '', '/verify-otp');
             } finally {
                 btnSendWa.disabled = false;
@@ -133,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.success) {
                     pOtp.classList.remove('active');
                     pInfo.classList.add('active');
+                    sessionStorage.setItem('b2d_otp_verified', 'true');
                     history.pushState({ step: 'details' }, '', '/details');
                     if (typeof fbq === 'function') {
                         fbq('track', 'Lead', { content_name: 'loan_lp_otp_verified', content_category: 'Personal loan' }, { eventID: data.fb_event_id });
@@ -144,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Fallback for standalone testing
                 pOtp.classList.remove('active');
                 pInfo.classList.add('active');
+                sessionStorage.setItem('b2d_otp_verified', 'true');
                 history.pushState({ step: 'details' }, '', '/details');
                 if (typeof fbq === 'function') {
                     fbq('track', 'Lead', { content_name: 'loan_lp_otp_verified', content_category: 'Personal loan' });
