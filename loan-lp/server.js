@@ -42,6 +42,51 @@ function toE164(mobile) {
     return digits.length === 10 ? `+91${digits}` : null;
 }
 
+const NETCORE_API_KEY = process.env.NETCORE_API_KEY;
+const NETCORE_FROM_EMAIL = process.env.NETCORE_FROM_EMAIL || 'noreply@mail.banking2day.com';
+
+function sendThankYouEmail({ toEmail, toName, refCode }) {
+    return new Promise((resolve) => {
+        if (!NETCORE_API_KEY || !toEmail) return resolve({ skipped: true });
+
+        const payload = JSON.stringify({
+            from: { email: NETCORE_FROM_EMAIL, name: 'Banking2Day' },
+            subject: `We've received your loan application — Ref ${refCode}`,
+            content: [{
+                type: 'html',
+                value: `<p>Hi ${toName || 'there'},</p>
+<p>Thanks for applying for a personal loan with Banking2Day. Your reference number is <b>${refCode}</b>.</p>
+<p>We've received your details and will connect with you shortly. Banking2Day is an independent comparison partner, not a lender.</p>
+<p>— Team Banking2Day</p>`
+            }],
+            personalizations: [{ to: [{ email: toEmail, name: toName || '' }] }]
+        });
+
+        const options = {
+            hostname: 'emailapi.netcorecloud.net',
+            port: 443,
+            path: '/v5/mail/send',
+            method: 'POST',
+            headers: {
+                'api_key': NETCORE_API_KEY,
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(payload)
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            let body = '';
+            res.on('data', (c) => (body += c));
+            res.on('end', () => {
+                try { resolve(JSON.parse(body)); } catch (e) { resolve({ raw: body }); }
+            });
+        });
+        req.on('error', (e) => resolve({ error: e.message }));
+        req.write(payload);
+        req.end();
+    });
+}
+
 const FB_PIXEL_ID = process.env.FB_PIXEL_ID || '2053705385262833';
 const FB_CAPI_TOKEN = process.env.FB_CAPI_ACCESS_TOKEN;
 const sha256 = (v) => crypto.createHash('sha256').update(v.trim().toLowerCase()).digest('hex');
@@ -328,6 +373,12 @@ const server = http.createServer(async (req, res) => {
         } catch (e) {
             console.error('[Audience sync FAILED]', e.message);
         }
+
+        sendThankYouEmail({
+            toEmail: recordToSave.email,
+            toName: recordToSave.full_name,
+            refCode
+        }).then((r) => console.log('[Thank-you email]', JSON.stringify(r)));
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ success: true, reference_id: refCode }));
