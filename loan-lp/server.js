@@ -52,17 +52,15 @@ const CC_OFFERS = [
 ];
 
 function ccOffersHtml() {
-    return CC_OFFERS.map((c) => `
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
-        <tr>
-          <td style="padding:16px;text-align:center;background:#fafafa">
-            <img src="https://loan.banking2day.com/${c.img}" alt="${c.name}" width="180" style="display:block;margin:0 auto 10px;border-radius:8px">
-            <div style="font-family:sans-serif;font-weight:700;font-size:15px;color:#111827">${c.name}</div>
-            <div style="font-family:sans-serif;font-size:13px;color:#4b5563;margin:6px 0 12px">${c.benefit}</div>
-            <a href="${c.url}" style="display:inline-block;background:#16a34a;color:#ffffff;font-family:sans-serif;font-weight:700;font-size:13px;text-decoration:none;padding:10px 22px;border-radius:6px">Apply Now</a>
-          </td>
-        </tr>
-      </table>`).join('');
+    const cells = CC_OFFERS.map((c) => `
+        <td width="33%" style="padding:4px;vertical-align:top">
+          <a href="${c.url}" style="display:block;text-decoration:none;text-align:center;border:1px solid #cbd5e1;border-radius:10px;padding:10px 6px;background:#fafafa">
+            <img src="https://loan.banking2day.com/${c.img}" alt="${c.name}" width="90" style="display:block;margin:0 auto 6px;border-radius:8px">
+            <div style="font-family:sans-serif;font-weight:800;font-size:12px;color:#111827;margin-bottom:6px">${c.name}</div>
+            <span style="display:inline-block;background:linear-gradient(135deg,#ff9900,#ff5500);background-color:#ff5500;color:#ffffff;font-family:sans-serif;font-weight:800;font-size:11px;text-decoration:none;padding:5px 12px;border-radius:50px">Apply →</span>
+          </a>
+        </td>`).join('');
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${cells}</tr></table>`;
 }
 
 function sendThankYouEmail({ toEmail, toName, refCode }) {
