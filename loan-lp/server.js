@@ -85,7 +85,8 @@ function sendThankYouEmail({ toEmail, toName, refCode }) {
 ${ccOffersHtml()}
 </div>`
             }],
-            personalizations: [{ to: [{ email: toEmail, name: toName || '' }] }]
+            personalizations: [{ to: [{ email: toEmail, name: toName || '' }] }],
+            settings: { click_tracking: false, open_tracking: true }
         });
 
         const options = {
