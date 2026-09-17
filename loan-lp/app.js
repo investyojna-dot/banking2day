@@ -163,48 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --------------------------------------------------------------------------
-    // 3. CREDIT CARD OFFERS SLIDER CAROUSEL LOGIC
-    // --------------------------------------------------------------------------
-    let currentSlide = 0;
-    const slides = document.querySelectorAll('.cc-slide-card');
-    const dots = document.querySelectorAll('.cc-dot');
-    const prevBtn = document.getElementById('cc-prev-btn');
-    const nextBtn = document.getElementById('cc-next-btn');
-
-    function showSlide(index) {
-        if (!slides.length) return;
-        if (index >= slides.length) currentSlide = 0;
-        else if (index < 0) currentSlide = slides.length - 1;
-        else currentSlide = index;
-
-        slides.forEach((slide, i) => {
-            if (i === currentSlide) slide.classList.add('active');
-            else slide.classList.remove('active');
-        });
-
-        dots.forEach((dot, i) => {
-            if (i === currentSlide) dot.classList.add('active');
-            else dot.classList.remove('active');
-        });
-    }
-
-    if (prevBtn && nextBtn) {
-        prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
-        nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
-    }
-
-    dots.forEach((dot, idx) => {
-        dot.addEventListener('click', () => showSlide(idx));
-    });
-
-    setInterval(() => {
-        if (pThankyou && pThankyou.classList.contains('active')) {
-            showSlide(currentSlide + 1);
-        }
-    }, 4000);
-
-
-    // --------------------------------------------------------------------------
     // 4. STEP 3 SUBMISSION -> API CALL SUBMIT LEAD & THANK YOU EMAIL TRIGGER
     // --------------------------------------------------------------------------
     const funnelForm = document.getElementById('funnel-lead-form');
@@ -297,7 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
             pThankyou.classList.add('active');
             history.pushState({ step: 'thank-you' }, '', '/thank-you');
 
-            showSlide(0);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
