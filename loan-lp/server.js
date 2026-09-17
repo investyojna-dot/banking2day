@@ -21,6 +21,50 @@ function toE164(mobile) {
     return digits.length === 10 ? `+91${digits}` : null;
 }
 
+const FB_PIXEL_ID = process.env.FB_PIXEL_ID || '2053705385262833';
+const FB_CAPI_TOKEN = process.env.FB_CAPI_ACCESS_TOKEN;
+const sha256 = (v) => crypto.createHash('sha256').update(v.trim().toLowerCase()).digest('hex');
+
+function sendFacebookLeadEvent({ phone, eventId, sourceUrl, userAgent, clientIp }) {
+    return new Promise((resolve) => {
+        if (!FB_CAPI_TOKEN) return resolve({ skipped: 'FB_CAPI_ACCESS_TOKEN not set' });
+
+        const payload = JSON.stringify({
+            data: [{
+                event_name: 'Lead',
+                event_time: Math.floor(Date.now() / 1000),
+                event_id: eventId,
+                action_source: 'website',
+                event_source_url: sourceUrl,
+                user_data: {
+                    ph: [sha256(phone.replace(/\D/g, ''))],
+                    client_user_agent: userAgent || '',
+                    client_ip_address: clientIp || ''
+                }
+            }]
+        });
+
+        const options = {
+            hostname: 'graph.facebook.com',
+            port: 443,
+            path: `/v21.0/${FB_PIXEL_ID}/events?access_token=${FB_CAPI_TOKEN}`,
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
+        };
+
+        const req = https.request(options, (res) => {
+            let body = '';
+            res.on('data', (c) => (body += c));
+            res.on('end', () => {
+                try { resolve(JSON.parse(body)); } catch (e) { resolve({ raw: body }); }
+            });
+        });
+        req.on('error', (e) => resolve({ error: e.message }));
+        req.write(payload);
+        req.end();
+    });
+}
+
 async function syncToAudience(record) {
     const phone = toE164(record.mobile_number);
     if (!phone) return;
@@ -192,8 +236,18 @@ const server = http.createServer(async (req, res) => {
         const record = otpStore[mobile_number];
         if (record && record.otp === otp_code && record.expiresAt > Date.now()) {
             delete otpStore[mobile_number];
+
+            const fbEventId = crypto.randomUUID();
+            sendFacebookLeadEvent({
+                phone: `91${mobile_number}`,
+                eventId: fbEventId,
+                sourceUrl: 'https://loan.banking2day.com/verify-otp',
+                userAgent: req.headers['user-agent'],
+                clientIp: (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim()
+            }).then((r) => console.log('[FB CAPI Lead]', JSON.stringify(r)));
+
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            return res.end(JSON.stringify({ success: true, message: 'OTP verified successfully' }));
+            return res.end(JSON.stringify({ success: true, message: 'OTP verified successfully', fb_event_id: fbEventId }));
         } else {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             return res.end(JSON.stringify({ success: false, message: 'Incorrect OTP code entered' }));

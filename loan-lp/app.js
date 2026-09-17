@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     pInfo.classList.add('active');
                     history.pushState({ step: 'details' }, '', '/details');
                     if (typeof fbq === 'function') {
-                        fbq('track', 'Lead', { content_name: 'loan_lp_otp_verified', content_category: 'Personal loan' });
+                        fbq('track', 'Lead', { content_name: 'loan_lp_otp_verified', content_category: 'Personal loan' }, { eventID: data.fb_event_id });
                     }
                 } else {
                     toggleError(otpInput, true, data.message || 'Incorrect OTP code');
