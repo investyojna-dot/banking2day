@@ -7,10 +7,63 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { DynamoDBClient, PutItemCommand } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBClient, PutItemCommand, UpdateItemCommand } = require('@aws-sdk/client-dynamodb');
 
 const ddb = new DynamoDBClient({ region: process.env.AWS_REGION || 'ap-south-1' });
 const LEADS_TABLE = process.env.LEADS_TABLE || 'knox-media-leads';
+
+const AUDIENCE_BRAND = process.env.AUDIENCE_BRAND || 'banking2day';
+const AUDIENCE_LIST_ID = process.env.AUDIENCE_LIST_ID || 'loan-lp-leads';
+const AUDIENCE_LIST_NAME = 'Loan LP Leads';
+
+function toE164(mobile) {
+    const digits = String(mobile || '').replace(/\D/g, '');
+    return digits.length === 10 ? `+91${digits}` : null;
+}
+
+async function syncToAudience(record) {
+    const phone = toE164(record.mobile_number);
+    if (!phone) return;
+
+    let isNewContact = true;
+    try {
+        await ddb.send(new PutItemCommand({
+            TableName: 'cadence-contacts',
+            Item: {
+                pk: { S: `LIST#${AUDIENCE_BRAND}#${AUDIENCE_LIST_ID}` },
+                sk: { S: `PHONE#${phone}` },
+                brandId: { S: AUDIENCE_BRAND },
+                listId: { S: AUDIENCE_LIST_ID },
+                phone: { S: phone },
+                name: { S: record.full_name || '—' },
+                optIn: { BOOL: true },
+                fields: { S: JSON.stringify({ email: record.email, city: record.city, emp_type: record.emp_type, reference_id: record.reference_id }) }
+            },
+            ConditionExpression: 'attribute_not_exists(pk)'
+        }));
+    } catch (e) {
+        if (e.name === 'ConditionalCheckFailedException') isNewContact = false;
+        else { console.error('[Audience sync FAILED]', e.message); return; }
+    }
+
+    if (!isNewContact) return;
+
+    await ddb.send(new UpdateItemCommand({
+        TableName: 'cadence-contacts',
+        Key: { pk: { S: `LISTS#${AUDIENCE_BRAND}` }, sk: { S: `LIST#${AUDIENCE_LIST_ID}` } },
+        UpdateExpression: 'SET brandId = if_not_exists(brandId, :b), listId = if_not_exists(listId, :l), #n = if_not_exists(#n, :n), fileName = if_not_exists(fileName, :f), uploadedAt = if_not_exists(uploadedAt, :u), #c = if_not_exists(#c, :c) ADD contacts :one, sendable :one',
+        ExpressionAttributeNames: { '#n': 'name', '#c': 'columns' },
+        ExpressionAttributeValues: {
+            ':b': { S: AUDIENCE_BRAND },
+            ':l': { S: AUDIENCE_LIST_ID },
+            ':n': { S: AUDIENCE_LIST_NAME },
+            ':f': { S: 'loan.banking2day.com' },
+            ':u': { S: new Date().toISOString() },
+            ':c': { S: JSON.stringify(['email', 'city', 'emp_type', 'reference_id']) },
+            ':one': { N: '1' }
+        }
+    }));
+}
 
 let PORT = process.env.PORT || 3000;
 
@@ -191,6 +244,12 @@ const server = http.createServer(async (req, res) => {
         }
 
         console.log(`[Lead Saved] Reference ID: ${refCode} | Name: ${recordToSave.full_name}`);
+
+        try {
+            await syncToAudience(recordToSave);
+        } catch (e) {
+            console.error('[Audience sync FAILED]', e.message);
+        }
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ success: true, reference_id: refCode }));
