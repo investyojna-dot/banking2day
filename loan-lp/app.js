@@ -87,6 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     pPhone.classList.remove('active');
                     pOtp.classList.add('active');
                     history.pushState({ step: 'otp' }, '', '/verify-otp');
+                    if (typeof fbq === 'function') {
+                        fbq('trackCustom', 'OTPRequested', { content_name: 'loan_lp_otp_requested', content_category: 'Personal loan' });
+                    }
                 } else {
                     toggleError(mobileInput, true, data.message || 'Failed to send WhatsApp OTP');
                 }

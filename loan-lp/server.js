@@ -11,6 +11,27 @@ const { DynamoDBClient, PutItemCommand, UpdateItemCommand } = require('@aws-sdk/
 
 const ddb = new DynamoDBClient({ region: process.env.AWS_REGION || 'ap-south-1' });
 const LEADS_TABLE = process.env.LEADS_TABLE || 'knox-media-leads';
+const FUNNEL_TABLE = process.env.FUNNEL_TABLE || 'banking2day-otp-funnel';
+
+function recordOtpRequested(mobile_number) {
+    return ddb.send(new PutItemCommand({
+        TableName: FUNNEL_TABLE,
+        Item: {
+            mobile_number: { S: mobile_number },
+            requested_at: { S: new Date().toISOString() },
+            otp_verified: { BOOL: false }
+        }
+    })).catch((e) => console.error('[Funnel record FAILED]', e.message));
+}
+
+function recordOtpVerified(mobile_number) {
+    return ddb.send(new UpdateItemCommand({
+        TableName: FUNNEL_TABLE,
+        Key: { mobile_number: { S: mobile_number } },
+        UpdateExpression: 'SET otp_verified = :v, verified_at = :t',
+        ExpressionAttributeValues: { ':v': { BOOL: true }, ':t': { S: new Date().toISOString() } }
+    })).catch((e) => console.error('[Funnel record FAILED]', e.message));
+}
 
 const AUDIENCE_BRAND = process.env.AUDIENCE_BRAND || 'banking2day';
 const AUDIENCE_LIST_ID = process.env.AUDIENCE_LIST_ID || 'loan-lp-leads';
@@ -216,6 +237,8 @@ const server = http.createServer(async (req, res) => {
 
         console.log(`[LIVE WhatsApp OTP Triggered] +91 ${mobile_number} | OTP: ${generatedOtp}`);
 
+        recordOtpRequested(mobile_number);
+
         const metaRes = await sendMetaWhatsApp(mobile_number, generatedOtp);
         console.log('[Meta Live API Response]', metaRes);
 
@@ -236,6 +259,7 @@ const server = http.createServer(async (req, res) => {
         const record = otpStore[mobile_number];
         if (record && record.otp === otp_code && record.expiresAt > Date.now()) {
             delete otpStore[mobile_number];
+            recordOtpVerified(mobile_number);
 
             const fbEventId = crypto.randomUUID();
             sendFacebookLeadEvent({
