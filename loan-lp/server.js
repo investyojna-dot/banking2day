@@ -45,6 +45,26 @@ function toE164(mobile) {
 const NETCORE_API_KEY = process.env.NETCORE_API_KEY;
 const NETCORE_FROM_EMAIL = process.env.NETCORE_FROM_EMAIL || 'noreply@mail.banking2day.com';
 
+const CC_OFFERS = [
+    { name: 'IDFC FIRST Credit Card', benefit: '⭐ Zero Joining & Annual Fee', img: 'idfc_card.png', url: 'https://trk.trackgrove.com/click?campaign_id=491&pub_id=92' },
+    { name: 'Scapia Credit Card', benefit: '✈️ Zero Forex Markup', img: 'scapia_card.png', url: 'https://click.vetronova.com/click?campaign_id=862&pub_id=92' },
+    { name: 'IndusInd Credit Card', benefit: '💰 Rewards on Every Spend', img: 'indus_card.png', url: 'https://click.mintuaff.com/click?campaign_id=47&pub_id=92' }
+];
+
+function ccOffersHtml() {
+    return CC_OFFERS.map((c) => `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
+        <tr>
+          <td style="padding:16px;text-align:center;background:#fafafa">
+            <img src="https://loan.banking2day.com/${c.img}" alt="${c.name}" width="180" style="display:block;margin:0 auto 10px;border-radius:8px">
+            <div style="font-family:sans-serif;font-weight:700;font-size:15px;color:#111827">${c.name}</div>
+            <div style="font-family:sans-serif;font-size:13px;color:#4b5563;margin:6px 0 12px">${c.benefit}</div>
+            <a href="${c.url}" style="display:inline-block;background:#16a34a;color:#ffffff;font-family:sans-serif;font-weight:700;font-size:13px;text-decoration:none;padding:10px 22px;border-radius:6px">Apply Now</a>
+          </td>
+        </tr>
+      </table>`).join('');
+}
+
 function sendThankYouEmail({ toEmail, toName, refCode }) {
     return new Promise((resolve) => {
         if (!NETCORE_API_KEY || !toEmail) return resolve({ skipped: true });
@@ -54,10 +74,16 @@ function sendThankYouEmail({ toEmail, toName, refCode }) {
             subject: `We've received your loan application — Ref ${refCode}`,
             content: [{
                 type: 'html',
-                value: `<p>Hi ${toName || 'there'},</p>
+                value: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+<p>Hi ${toName || 'there'},</p>
 <p>Thanks for applying for a personal loan with Banking2Day. Your reference number is <b>${refCode}</b>.</p>
 <p>We've received your details and will connect with you shortly. Banking2Day is an independent comparison partner, not a lender.</p>
-<p>— Team Banking2Day</p>`
+<p>— Team Banking2Day</p>
+<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
+<p style="font-weight:700;font-size:15px;color:#111827">🔥 Recommended Pre-Approved Offers</p>
+<p style="font-size:13px;color:#6b7280;margin-top:-8px">Claim your free credit card now</p>
+${ccOffersHtml()}
+</div>`
             }],
             personalizations: [{ to: [{ email: toEmail, name: toName || '' }] }]
         });
