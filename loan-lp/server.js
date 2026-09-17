@@ -70,7 +70,7 @@ function sendThankYouEmail({ toEmail, toName, refCode }) {
 
         const payload = JSON.stringify({
             from: { email: NETCORE_FROM_EMAIL, name: 'Banking2Day' },
-            subject: `Ref ${refCode} — We've received your loan application`,
+            subject: `We've received your enquiry — Banking2Day`,
             content: [{
                 type: 'html',
                 value: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto">
