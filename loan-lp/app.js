@@ -86,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     dispMaskedPhone.textContent = `+91 ${mobVal.substring(0, 2)}******${mobVal.substring(8)}`;
                     pPhone.classList.remove('active');
                     pOtp.classList.add('active');
+                    history.pushState({ step: 'otp' }, '', '/verify-otp');
                 } else {
                     toggleError(mobileInput, true, data.message || 'Failed to send WhatsApp OTP');
                 }
@@ -94,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dispMaskedPhone.textContent = `+91 ${mobVal.substring(0, 2)}******${mobVal.substring(8)}`;
                 pPhone.classList.remove('active');
                 pOtp.classList.add('active');
+                history.pushState({ step: 'otp' }, '', '/verify-otp');
             } finally {
                 btnSendWa.disabled = false;
                 btnSendWa.textContent = 'Get OTP via WhatsApp 💬';
@@ -128,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.success) {
                     pOtp.classList.remove('active');
                     pInfo.classList.add('active');
+                    history.pushState({ step: 'details' }, '', '/details');
                 } else {
                     toggleError(otpInput, true, data.message || 'Incorrect OTP code');
                 }
@@ -135,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Fallback for standalone testing
                 pOtp.classList.remove('active');
                 pInfo.classList.add('active');
+                history.pushState({ step: 'details' }, '', '/details');
             } finally {
                 btnVerifyOtp.disabled = false;
                 btnVerifyOtp.textContent = 'Verify OTP & Continue →';
@@ -281,6 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             pInfo.classList.remove('active');
             pThankyou.classList.add('active');
+            history.pushState({ step: 'thank-you' }, '', '/thank-you');
 
             showSlide(0);
             window.scrollTo({ top: 0, behavior: 'smooth' });
