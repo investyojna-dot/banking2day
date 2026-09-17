@@ -131,6 +131,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     pOtp.classList.remove('active');
                     pInfo.classList.add('active');
                     history.pushState({ step: 'details' }, '', '/details');
+                    if (typeof fbq === 'function') {
+                        fbq('track', 'Lead', { content_name: 'loan_lp_otp_verified', content_category: 'Personal loan' });
+                    }
                 } else {
                     toggleError(otpInput, true, data.message || 'Incorrect OTP code');
                 }
@@ -139,6 +142,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 pOtp.classList.remove('active');
                 pInfo.classList.add('active');
                 history.pushState({ step: 'details' }, '', '/details');
+                if (typeof fbq === 'function') {
+                    fbq('track', 'Lead', { content_name: 'loan_lp_otp_verified', content_category: 'Personal loan' });
+                }
             } finally {
                 btnVerifyOtp.disabled = false;
                 btnVerifyOtp.textContent = 'Verify OTP & Continue →';
