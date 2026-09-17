@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
+    <title>Apply for Instant Personal Loan Online | Banking2Day</title>
+    <meta name="description" content="Apply for instant personal loan online in minutes. Get fast approval, flexible EMI options, and cash credited directly to your bank account in 2 hours.">
+    <meta name="keywords" content="instant personal loan, banking2day, fast approval loan, instant cash online">
+    <meta name="theme-color" content="#094db2">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo.png">
+
+    <!-- Font: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="centered-single-column-page">
+
+    <!-- Unified Single Column Wrapper -->
+    <div class="page-unified-column">
+
+        <!-- Header Navbar (Centered Official Logo) -->
+        <header class="navbar text-center">
+            <a href="#" class="brand-logo-centered">
+                <img src="logo.png" alt="banking2day - Your Daily Financial Partner" class="brand-logo-img">
+            </a>
+        </header>
+
+        <!-- Top Blue Hero Banner -->
+        <div class="hero-blue-banner">
+            <div class="banner-top-row text-center">
+                <span class="banner-small-title">Get Loans up to</span>
+                <h2 class="banner-loan-amount">₹10,00,000</h2>
+                <p class="banner-sub-text">Get cash in your account within 2 hours.</p>
+            </div>
+
+            <!-- 3 Pill Badges Row -->
+            <div class="hero-badges-row">
+                <div class="hero-badge-item">
+                    <span class="badge-icon">🛡️</span>
+                    <span>100% Online</span>
+                </div>
+                <div class="hero-badge-item">
+                    <span class="badge-icon">⚡</span>
+                    <span>Instant Disbursal</span>
+                </div>
+                <div class="hero-badge-item">
+                    <span class="badge-icon">👛</span>
+                    <span>Flexible Repayments</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Form Section -->
+        <main class="main-form-section">
+
+            <!-- Card Container -->
+            <div class="lead-form-card">
+                
+                <!-- Main Form -->
+                <form id="funnel-lead-form" novalidate>
+                    
+                    <!-- Hidden Referral Tracking Query Parameters & Generated Reference ID -->
+                    <input type="hidden" name="reference_id" id="reference_id" value="">
+                    <input type="hidden" name="click_id" id="click_id" value="">
+                    <input type="hidden" name="campaign" id="campaign" value="">
+                    <input type="hidden" name="utm_source" id="utm_source" value="">
+                    <input type="hidden" name="utm_medium" id="utm_medium" value="">
+                    <input type="hidden" name="utm_campaign" id="utm_campaign" value="">
+                    <input type="hidden" name="utm_trackingid" id="utm_trackingid" value="">
+
+                    <!-- STEP 1: Phone Number Input -->
+                    <div class="funnel-panel active" id="panel-step-phone">
+                        <p class="form-subtitle">We will send you a one time password to verify your mobile number</p>
+
+                        <div class="input-group">
+                            <label for="mobile_number">ENTER MOBILE NUMBER</label>
+                            <div class="addon-input-ss">
+                                <span class="addon-prefix-ss">+91</span>
+                                <input type="tel" id="mobile_number" name="mobile_number" placeholder="Enter 10 Digit mobile number" maxlength="10" required>
+                            </div>
+                            <span class="err-msg" id="err-mobile">Please enter a valid 10-digit mobile number</span>
+                        </div>
+
+                        <button type="button" class="btn btn-whatsapp-primary btn-block btn-lg" id="btn-send-whatsapp-otp">
+                            Get OTP via WhatsApp 💬
+                        </button>
+                    </div>
+
+                    <!-- STEP 2: WhatsApp OTP Verification -->
+                    <div class="funnel-panel" id="panel-step-otp">
+                        <h2 class="form-title">Verify Mobile Number</h2>
+                        <p class="form-subtitle">Enter 4-digit verification code sent via WhatsApp to <strong id="disp-masked-phone">+91 XXXXXXXX</strong></p>
+
+                        <div class="input-group text-center">
+                            <label for="otp_code">ENTER VERIFICATION CODE</label>
+                            <div class="otp-box-row">
+                                <input type="text" id="otp_code" placeholder="1234" maxlength="4" value="9876" required>
+                            </div>
+                            <span class="err-msg" id="err-otp">Please enter valid 4-digit OTP</span>
+                        </div>
+
+                        <div class="resend-whatsapp-row text-center">
+                            <button type="button" class="btn-resend-link" id="btn-resend-wa">
+                                💬 Resend WhatsApp OTP
+                            </button>
+                        </div>
+
+                        <button type="button" class="btn btn-primary-form btn-block btn-lg" id="btn-verify-otp">
+                            Verify OTP & Continue &rarr;
+                        </button>
+                    </div>
+
+                    <!-- STEP 3: Rest Info (Full Name, Email, City, Employment) -->
+                    <div class="funnel-panel" id="panel-step-info">
+                        <h2 class="form-title">Personal Details</h2>
+                        <p class="form-subtitle">Complete basic information to claim your loan</p>
+
+                        <!-- Full Name -->
+                        <div class="input-group">
+                            <label for="full_name">Full Name</label>
+                            <input type="text" id="full_name" name="full_name" placeholder="Enter your full name" required>
+                            <span class="err-msg" id="err-name">Please enter your full name</span>
+                        </div>
+
+                        <!-- Email ID -->
+                        <div class="input-group">
+                            <label for="email">Email ID</label>
+                            <input type="email" id="email" name="email" placeholder="name@example.com" required>
+                            <span class="err-msg" id="err-email">Please enter a valid email address</span>
+                        </div>
+
+                        <!-- City -->
+                        <div class="input-group">
+                            <label for="city">City</label>
+                            <input type="text" id="city" name="city" placeholder="e.g. Mumbai" required>
+                            <span class="err-msg" id="err-city">Please enter your city</span>
+                        </div>
+
+                        <!-- Employment Type -->
+                        <div class="input-group">
+                            <label>Employment Type</label>
+                            <div class="radio-pill-container">
+                                <label class="radio-pill active">
+                                    <input type="radio" name="emp_type" value="Salaried" checked>
+                                    <span>💼 Salaried</span>
+                                </label>
+                                <label class="radio-pill">
+                                    <input type="radio" name="emp_type" value="Self-Employed">
+                                    <span>🏪 Self-Employed</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Terms Consent -->
+                        <div class="consent-group">
+                            <label>
+                                <input type="checkbox" id="consent_check" checked required>
+                                <span>I agree to Banking2Day's <a href="terms.html" target="_blank">Terms</a> & <a href="privacy.html" target="_blank">Privacy Policy</a> and give consent for credit bureau evaluation.</span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-success-form btn-block btn-lg pulse-animation">
+                            Submit Application &rarr;
+                        </button>
+                    </div>
+
+                    <!-- STEP 4: Minimal Single-Viewport Thank You Screen (No Scroll Needed) -->
+                    <div class="funnel-panel" id="panel-step-thankyou">
+                        <div class="clean-thankyou-screen text-center">
+                            
+                            <div class="success-check-circle">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+
+                            <h2 class="ty-title">Thank You!</h2>
+                            <p class="ty-connect-msg">Thank you for applying personal loan with us, we will connect with you soon.</p>
+
+                            <div class="ty-ref-pill">
+                                Reference ID: <strong id="ty-ref-id">B2D-21269</strong>
+                            </div>
+
+                            <!-- Pre-Approved Credit Card Offers Slider with Eye-Catching Blinking Apply Button -->
+                            <div class="cc-offers-section">
+                                <div class="cc-section-header">
+                                    <span class="cc-fire-badge">🔥 Recommended Pre-Approved Offers</span>
+                                    <h4>Claim Your Free Credit Card Now</h4>
+                                </div>
+
+                                <div class="cc-carousel-container">
+                                    <button type="button" class="cc-nav-btn cc-prev" id="cc-prev-btn">&larr;</button>
+                                    
+                                    <div class="cc-slides-wrapper" id="cc-slides-wrapper">
+                                        
+                                        <!-- Card 1: HDFC Bank -->
+                                        <div class="cc-slide-card active">
+                                            <div class="cc-card-img-box text-center">
+                                                <img src="hdfc_card.svg" alt="HDFC Freedom Credit Card" class="cc-sample-img">
+                                            </div>
+                                            <div class="cc-card-body text-center">
+                                                <h5>HDFC Freedom Credit Card</h5>
+                                                <div class="cc-benefit-pill">🎁 ₹1,500 Amazon Gift Voucher</div>
+                                                <a href="https://banking2day.com/apply-hdfc" target="_blank" class="btn btn-cc-apply-blinker btn-block">
+                                                    Apply Now 💳
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 2: SBI Card -->
+                                        <div class="cc-slide-card">
+                                            <div class="cc-card-img-box text-center">
+                                                <img src="sbi_card.svg" alt="SBI SimplyCLICK Credit Card" class="cc-sample-img">
+                                            </div>
+                                            <div class="cc-card-body text-center">
+                                                <h5>SBI SimplyCLICK Card</h5>
+                                                <div class="cc-benefit-pill">⚡ ₹500 Amazon Welcome Gift</div>
+                                                <a href="https://banking2day.com/apply-sbi" target="_blank" class="btn btn-cc-apply-blinker btn-block">
+                                                    Apply Now 💳
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 3: Axis Bank -->
+                                        <div class="cc-slide-card">
+                                            <div class="cc-card-img-box text-center">
+                                                <img src="axis_card.svg" alt="Axis MY ZONE Credit Card" class="cc-sample-img">
+                                            </div>
+                                            <div class="cc-card-body text-center">
+                                                <h5>Axis MY ZONE Card</h5>
+                                                <div class="cc-benefit-pill">🍿 Buy 1 Get 1 Movie Ticket</div>
+                                                <a href="https://banking2day.com/apply-axis" target="_blank" class="btn btn-cc-apply-blinker btn-block">
+                                                    Apply Now 💳
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 4: IDFC FIRST Bank -->
+                                        <div class="cc-slide-card">
+                                            <div class="cc-card-img-box text-center">
+                                                <img src="idfc_card.svg" alt="IDFC FIRST Millennia Credit Card" class="cc-sample-img">
+                                            </div>
+                                            <div class="cc-card-body text-center">
+                                                <h5>IDFC FIRST Millennia Card</h5>
+                                                <div class="cc-benefit-pill">⭐ Zero Joining & Annual Fee</div>
+                                                <a href="https://banking2day.com/apply-idfc" target="_blank" class="btn btn-cc-apply-blinker btn-block">
+                                                    Apply Now 💳
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <button type="button" class="cc-nav-btn cc-next" id="cc-next-btn">&rarr;</button>
+                                </div>
+
+                                <!-- Slider Dots Indicator -->
+                                <div class="cc-dots-indicator text-center" id="cc-dots-container">
+                                    <span class="cc-dot active" data-slide="0"></span>
+                                    <span class="cc-dot" data-slide="1"></span>
+                                    <span class="cc-dot" data-slide="2"></span>
+                                    <span class="cc-dot" data-slide="3"></span>
+                                </div>
+                            </div>
+
+                            <div class="form-partners-bar text-center">
+                                <span>🔒 100% Data Confidentiality & Bank-Grade Security</span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </form>
+
+            </div>
+
+            <!-- Value Props Pillars Grid Below Form -->
+            <div class="value-pillars-grid">
+                <div class="pillar-card">
+                    <div class="pillar-icon">⚡</div>
+                    <div class="pillar-text">
+                        <h4>Instant Money Transfer</h4>
+                        <p>Funds credited directly to your bank account via IMPS</p>
+                    </div>
+                </div>
+
+                <div class="pillar-card">
+                    <div class="pillar-icon">%</div>
+                    <div class="pillar-text">
+                        <h4>Lowest Rates starting @ 10.49% p.a.</h4>
+                        <p>Flexible repayment tenure from 3 to 72 months</p>
+                    </div>
+                </div>
+
+                <div class="pillar-card">
+                    <div class="pillar-icon">📄</div>
+                    <div class="pillar-text">
+                        <h4>100% Digital & Paperless</h4>
+                        <p>Only Aadhaar & PAN card required — Zero physical visits</p>
+                    </div>
+                </div>
+
+                <div class="pillar-card">
+                    <div class="pillar-icon">🛡️</div>
+                    <div class="pillar-text">
+                        <h4>Zero Collateral Required</h4>
+                        <p>100% Unsecured personal loan with zero security deposit</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="compact-footer text-center">
+            <p class="footer-links">
+                <a href="terms.html" target="_blank">Terms & Conditions</a> | 
+                <a href="privacy.html" target="_blank">Privacy Policy</a>
+            </p>
+            <p class="footer-disclaimer">
+                <strong>Disclaimer:</strong> Banking2Day operates as a loan aggregator connecting borrowers with RBI-registered Banks & NBFCs. Interest rates range from 10.49% to 36% p.a., with repayment tenures from 3 to 72 months.
+            </p>
+            <p>&copy; 2026 Banking2Day.com — All Rights Reserved.</p>
+        </footer>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
