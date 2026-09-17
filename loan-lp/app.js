@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --------------------------------------------------------------------------
     function captureTrackingParams() {
         const params = new URLSearchParams(window.location.search);
-        const keys = ['click_id', 'campaign', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_trackingid', 'reference_id'];
+        const keys = ['click_id', 'campaign', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_trackingid', 'reference_id'];
 
         keys.forEach(k => {
             const val = params.get(k);
@@ -260,6 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 utm_source: document.getElementById('utm_source').value || '',
                 utm_medium: document.getElementById('utm_medium').value || '',
                 utm_campaign: document.getElementById('utm_campaign').value || '',
+                utm_content: document.getElementById('utm_content').value || '',
                 utm_trackingid: document.getElementById('utm_trackingid').value || ''
             };
 

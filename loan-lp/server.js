@@ -174,7 +174,7 @@ async function syncToAudience(record) {
                 phone: { S: phone },
                 name: { S: record.full_name || '—' },
                 optIn: { BOOL: true },
-                fields: { S: JSON.stringify({ email: record.email, city: record.city, emp_type: record.emp_type, reference_id: record.reference_id }) }
+                fields: { S: JSON.stringify({ email: record.email, city: record.city, emp_type: record.emp_type, reference_id: record.reference_id, utm_source: record.utm_source, utm_medium: record.utm_medium, utm_campaign: record.utm_campaign, utm_content: record.utm_content }) }
             },
             ConditionExpression: 'attribute_not_exists(pk)'
         }));
@@ -366,6 +366,10 @@ const server = http.createServer(async (req, res) => {
             click_id: body.click_id || '',
             campaign: body.campaign || '',
             utm_source: body.utm_source || '',
+            utm_medium: body.utm_medium || '',
+            utm_campaign: body.utm_campaign || '',
+            utm_content: body.utm_content || '',
+            utm_trackingid: body.utm_trackingid || '',
             submitted_at: new Date().toISOString()
         };
 
@@ -384,6 +388,10 @@ const server = http.createServer(async (req, res) => {
                     click_id: { S: recordToSave.click_id },
                     campaign: { S: recordToSave.campaign },
                     utm_source: { S: recordToSave.utm_source },
+                    utm_medium: { S: recordToSave.utm_medium },
+                    utm_campaign: { S: recordToSave.utm_campaign },
+                    utm_content: { S: recordToSave.utm_content },
+                    utm_trackingid: { S: recordToSave.utm_trackingid },
                     submitted_at: { S: recordToSave.submitted_at }
                 }
             }));
