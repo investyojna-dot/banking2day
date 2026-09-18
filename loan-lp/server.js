@@ -7,7 +7,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { DynamoDBClient, PutItemCommand, UpdateItemCommand } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBClient, PutItemCommand, UpdateItemCommand, QueryCommand } = require('@aws-sdk/client-dynamodb');
 
 const ddb = new DynamoDBClient({ region: process.env.AWS_REGION || 'ap-south-1' });
 const LEADS_TABLE = process.env.LEADS_TABLE || 'knox-media-leads';
@@ -76,14 +76,104 @@ function mintCadenceSession() {
     return `${payload}.${sig}`;
 }
 
+function todayIST() {
+    const ist = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+    return ist.toISOString().slice(0, 10);
+}
+
+/** Recomputes the day's campaign doc from the real delivery log — always accurate, no stale reads to merge. */
+async function upsertDailyCampaignDoc(campaignId, campaignName) {
+    let items = [];
+    let start;
+    do {
+        const out = await ddb.send(new QueryCommand({
+            TableName: 'cadence-messages',
+            KeyConditionExpression: 'pk = :pk',
+            ExpressionAttributeValues: { ':pk': { S: `CMP#${campaignId}` } },
+            ExclusiveStartKey: start
+        }));
+        items = items.concat(out.Items || []);
+        start = out.LastEvaluatedKey;
+    } while (start);
+
+    const total = items.length;
+    const delivered = items.filter((i) => ['delivered', 'read'].includes(i.state?.S)).length;
+    const read = items.filter((i) => i.state?.S === 'read').length;
+    const failed = items.filter((i) => i.state?.S === 'failed').length;
+    const sentTimes = items.map((i) => i.sentAt?.S).filter(Boolean).sort();
+    const firstAt = sentTimes[0] || new Date().toISOString();
+
+    let clickItems = [];
+    let clickStart;
+    do {
+        const out = await ddb.send(new QueryCommand({
+            TableName: 'cadence-clicks',
+            KeyConditionExpression: 'pk = :pk',
+            ExpressionAttributeValues: { ':pk': { S: `CAMPAIGN#${campaignId}` } },
+            ExclusiveStartKey: clickStart
+        }));
+        clickItems = clickItems.concat(out.Items || []);
+        clickStart = out.LastEvaluatedKey;
+    } while (clickStart);
+    const clicks = clickItems.length;
+    const ctrPct = delivered ? Math.round((clicks / delivered) * 1000) / 10 : null;
+
+    const campaign = {
+        id: campaignId,
+        name: campaignName,
+        meta: 'Auto-send on new lead · loan.banking2day.com',
+        numberIndex: null,
+        numberE164: '+91 87965 58526',
+        offerId: WELCOME_OFFER_ID,
+        type: 'Utility',
+        status: 'Active',
+        audience: total,
+        deliveredPct: total ? Math.round((delivered / total) * 1000) / 10 : null,
+        readPct: total ? Math.round((read / total) * 1000) / 10 : null,
+        ctrPct,
+        clicks,
+        failed,
+        bounced: 0,
+        leads: null,
+        approved: null,
+        payoutInr: null,
+        spendInr: null,
+        owner: 'Automation',
+        modified: new Date().toISOString(),
+        sentAt: firstAt,
+        templateName: WELCOME_TEMPLATE_NAME,
+        listId: 'loan-lp-leads',
+        includeList: true,
+        segmentId: null,
+        audienceLabel: 'Loan LP Leads (auto)',
+        local: true
+    };
+
+    await ddb.send(new PutItemCommand({
+        TableName: 'cadence-contacts',
+        Item: {
+            pk: { S: 'CAMPAIGNS#banking2day' },
+            sk: { S: campaignId },
+            brandId: { S: 'banking2day' },
+            docId: { S: campaignId },
+            doc: { S: JSON.stringify({ accountId: 'banking2day', campaign }) },
+            updatedAt: { S: new Date().toISOString() }
+        }
+    }));
+}
+
 function sendWelcomeWhatsApp({ mobile_number, full_name, refCode }) {
     return new Promise((resolve) => {
         const phone = toE164(mobile_number);
         if (!CADENCE_AUTH_SECRET || !phone) return resolve({ skipped: true });
 
+        const date = todayIST();
+        const campaignId = `B2DLOAN-${date}`;
+        const campaignName = `Loan LP Welcome · ${date}`;
+
         const payload = JSON.stringify({
             brandId: 'banking2day',
-            campaignId: 'loan-lp-welcome',
+            campaignId,
             phoneNumberId: WELCOME_PHONE_NUMBER_ID,
             templateName: WELCOME_TEMPLATE_NAME,
             languageCode: 'en',
@@ -107,8 +197,12 @@ function sendWelcomeWhatsApp({ mobile_number, full_name, refCode }) {
         const req = https.request(options, (res) => {
             let body = '';
             res.on('data', (c) => (body += c));
-            res.on('end', () => {
-                try { resolve(JSON.parse(body)); } catch (e) { resolve({ raw: body }); }
+            res.on('end', async () => {
+                let result;
+                try { result = JSON.parse(body); } catch (e) { result = { raw: body }; }
+                try { await upsertDailyCampaignDoc(campaignId, campaignName); }
+                catch (e) { console.error('[Campaign doc upsert FAILED]', e.message); }
+                resolve(result);
             });
         });
         req.on('error', (e) => resolve({ error: e.message }));
