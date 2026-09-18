@@ -7,6 +7,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const dns = require('dns').promises;
 const { DynamoDBClient, PutItemCommand, UpdateItemCommand, QueryCommand } = require('@aws-sdk/client-dynamodb');
 
 const ddb = new DynamoDBClient({ region: process.env.AWS_REGION || 'ap-south-1' });
@@ -40,6 +41,27 @@ const AUDIENCE_LIST_NAME = 'Loan LP Leads';
 function toE164(mobile) {
     const digits = String(mobile || '').replace(/\D/g, '');
     return digits.length === 10 ? `+91${digits}` : null;
+}
+
+/*
+ * Best-effort check that an email's domain can receive mail at all.
+ * Catches "no such domain" / dead-domain typos that slip past format
+ * validation. Cannot confirm a specific mailbox exists — major providers
+ * (Gmail, Outlook, etc.) accept everything at SMTP time and bounce later,
+ * so this is a floor, not a guarantee. Never blocks the lead either way;
+ * only decides whether we bother attempting the transactional email.
+ */
+async function domainCanReceiveMail(email) {
+    const domain = String(email || '').split('@')[1];
+    if (!domain) return false;
+    try {
+        const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 2500));
+        const records = await Promise.race([dns.resolveMx(domain), timeout]);
+        if (records === null) return true; // DNS was slow/unreachable — don't punish the lead for that
+        return records.length > 0;
+    } catch (e) {
+        return false; // NXDOMAIN or similar — domain genuinely can't receive mail
+    }
 }
 
 const NETCORE_API_KEY = process.env.NETCORE_API_KEY;
@@ -555,11 +577,17 @@ const server = http.createServer(async (req, res) => {
             console.error('[Audience sync FAILED]', e.message);
         }
 
-        sendThankYouEmail({
-            toEmail: recordToSave.email,
-            toName: recordToSave.full_name,
-            refCode
-        }).then((r) => console.log('[Thank-you email]', JSON.stringify(r)));
+        domainCanReceiveMail(recordToSave.email).then((canReceive) => {
+            if (!canReceive) {
+                console.log(`[Thank-you email] skipped, domain cannot receive mail: ${recordToSave.email}`);
+                return;
+            }
+            sendThankYouEmail({
+                toEmail: recordToSave.email,
+                toName: recordToSave.full_name,
+                refCode
+            }).then((r) => console.log('[Thank-you email]', JSON.stringify(r)));
+        });
 
         sendWelcomeWhatsApp({
             mobile_number: recordToSave.mobile_number,
