@@ -209,6 +209,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --------------------------------------------------------------------------
+    // 3b. EMAIL TYPO CATCHER — "Did you mean...?" before it ever hits send
+    // --------------------------------------------------------------------------
+    (function emailTypoCatcher() {
+        const emailInput = document.getElementById('email');
+        const suggestEl = document.getElementById('email-suggest');
+        if (!emailInput || !suggestEl) return;
+
+        const KNOWN_DOMAINS = [
+            'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com',
+            'rediffmail.com', 'live.com', 'aol.com', 'protonmail.com', 'yahoo.co.in'
+        ];
+        // Typos common enough to fix directly, no distance check needed.
+        const KNOWN_TYPOS = {
+            'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gmail.co': 'gmail.com',
+            'gmial.co': 'gmail.com', 'gnail.com': 'gmail.com', 'gamil.com': 'gmail.com',
+            'yahooo.com': 'yahoo.com', 'yaho.com': 'yahoo.com', 'yahoo.cin': 'yahoo.com',
+            'hotmial.com': 'hotmail.com', 'hotmil.com': 'hotmail.com', 'hotmal.com': 'hotmail.com',
+            'outlok.com': 'outlook.com', 'outllok.com': 'outlook.com'
+        };
+
+        function levenshtein(a, b) {
+            const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+            for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+            for (let i = 1; i <= a.length; i++) {
+                for (let j = 1; j <= b.length; j++) {
+                    dp[i][j] = a[i - 1] === b[j - 1]
+                        ? dp[i - 1][j - 1]
+                        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+                }
+            }
+            return dp[a.length][b.length];
+        }
+
+        function suggestionFor(email) {
+            const at = email.lastIndexOf('@');
+            if (at < 1) return null;
+            const domain = email.slice(at + 1).trim().toLowerCase();
+            if (!domain) return null;
+            if (KNOWN_DOMAINS.includes(domain)) return null;
+
+            if (KNOWN_TYPOS[domain]) return email.slice(0, at + 1) + KNOWN_TYPOS[domain];
+
+            let best = null;
+            let bestDist = 3;
+            for (const known of KNOWN_DOMAINS) {
+                const dist = levenshtein(domain, known);
+                if (dist > 0 && dist < bestDist) { bestDist = dist; best = known; }
+            }
+            return best ? email.slice(0, at + 1) + best : null;
+        }
+
+        function checkEmail() {
+            const value = emailInput.value.trim();
+            const suggestion = value ? suggestionFor(value) : null;
+            if (suggestion) {
+                suggestEl.textContent = `Did you mean ${suggestion}?`;
+                suggestEl.hidden = false;
+            } else {
+                suggestEl.hidden = true;
+            }
+        }
+
+        suggestEl.addEventListener('click', () => {
+            const fixed = suggestEl.textContent.replace('Did you mean ', '').replace('?', '');
+            emailInput.value = fixed;
+            suggestEl.hidden = true;
+        });
+
+        emailInput.addEventListener('blur', checkEmail);
+    })();
+
+
+    // --------------------------------------------------------------------------
     // 4. STEP 3 SUBMISSION -> API CALL SUBMIT LEAD & THANK YOU EMAIL TRIGGER
     // --------------------------------------------------------------------------
     const funnelForm = document.getElementById('funnel-lead-form');
