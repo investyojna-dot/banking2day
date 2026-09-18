@@ -64,6 +64,59 @@ function ccOffersHtml() {
 <div style="height:40px;line-height:40px;font-size:1px">&nbsp;</div>`;
 }
 
+const CADENCE_AUTH_SECRET = process.env.CADENCE_AUTH_SECRET;
+const WELCOME_PHONE_NUMBER_ID = process.env.WELCOME_PHONE_NUMBER_ID || '1274143322446507';
+const WELCOME_TEMPLATE_NAME = process.env.WELCOME_TEMPLATE_NAME || 'pl_prequalified_image_v2';
+const WELCOME_OFFER_ID = process.env.WELCOME_OFFER_ID || 'OFR-9008';
+const WELCOME_OFFER_URL = process.env.WELCOME_OFFER_URL || 'https://applyonline.ramfincorp.com/?utm_source=Intellectads_2001&utm_campaign=default_campaign&utm_medium=default_medium&utm_trackingid=default_id';
+
+function mintCadenceSession() {
+    const payload = Buffer.from(JSON.stringify({ exp: Date.now() + 12 * 60 * 60 * 1000 })).toString('base64url');
+    const sig = crypto.createHmac('sha256', CADENCE_AUTH_SECRET).update(payload).digest('base64url');
+    return `${payload}.${sig}`;
+}
+
+function sendWelcomeWhatsApp({ mobile_number, full_name, refCode }) {
+    return new Promise((resolve) => {
+        const phone = toE164(mobile_number);
+        if (!CADENCE_AUTH_SECRET || !phone) return resolve({ skipped: true });
+
+        const payload = JSON.stringify({
+            brandId: 'banking2day',
+            campaignId: 'loan-lp-welcome',
+            phoneNumberId: WELCOME_PHONE_NUMBER_ID,
+            templateName: WELCOME_TEMPLATE_NAME,
+            languageCode: 'en',
+            header: { kind: 'image', link: 'https://banking2day.com/creatives/pl-trust-1.jpg' },
+            recipients: [{ phone, variables: [full_name || 'there', refCode, 'Check Eligibility'] }],
+            tracking: { offerId: WELCOME_OFFER_ID, destinationUrl: WELCOME_OFFER_URL }
+        });
+
+        const options = {
+            hostname: 'panel.banking2day.com',
+            port: 443,
+            path: '/api/v1/send',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(payload),
+                'Cookie': `cc_session=${mintCadenceSession()}`
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            let body = '';
+            res.on('data', (c) => (body += c));
+            res.on('end', () => {
+                try { resolve(JSON.parse(body)); } catch (e) { resolve({ raw: body }); }
+            });
+        });
+        req.on('error', (e) => resolve({ error: e.message }));
+        req.write(payload);
+        req.end();
+    });
+}
+
 function sendThankYouEmail({ toEmail, toName, refCode }) {
     return new Promise((resolve) => {
         if (!NETCORE_API_KEY || !toEmail) return resolve({ skipped: true });
@@ -413,6 +466,12 @@ const server = http.createServer(async (req, res) => {
             toName: recordToSave.full_name,
             refCode
         }).then((r) => console.log('[Thank-you email]', JSON.stringify(r)));
+
+        sendWelcomeWhatsApp({
+            mobile_number: recordToSave.mobile_number,
+            full_name: recordToSave.full_name,
+            refCode
+        }).then((r) => console.log('[Welcome WhatsApp]', JSON.stringify(r)));
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ success: true, reference_id: refCode }));
